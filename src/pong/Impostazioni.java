@@ -29,6 +29,15 @@ public record Impostazioni(int puntiPerVincere, int scartoMinimo, int velocitaPa
      */
     public Impostazioni {
         // scrivete qui
+        if (puntiPerVincere < 1 || puntiPerVincere > 99) {
+            throw new IllegalArgumentException("puntiPerVincere deve essere fra 1 e 99, invece è " + puntiPerVincere);
+        }
+        if (scartoMinimo < 1 || scartoMinimo > 10) {
+            throw new IllegalArgumentException("scartoMinimo deve essere fra 1 e 10, invece è " + scartoMinimo);
+        }
+        if (velocitaPalla < 1 || velocitaPalla > 20) {
+            throw new IllegalArgumentException("velocitaPalla deve essere fra 1 e 20, invece è " + velocitaPalla);
+        }
     }
 
     /**
@@ -51,7 +60,77 @@ public record Impostazioni(int puntiPerVincere, int scartoMinimo, int velocitaPa
      * Se ci sono errori in più righe, il messaggio è quello della riga più in alto.
      */
     public static Impostazioni leggi(List<String> righe) {
-        return STANDARD; // scrivete qui
+        int punti = STANDARD.puntiPerVincere();
+        int scarto = STANDARD.scartoMinimo();
+        int velocita = STANDARD.velocitaPalla();
+
+        boolean cePunti = false;
+        boolean ceScarto = false;
+        boolean ceVelocita = false;
+
+        for ( int i = 0; i < righe.size(); i++ ) {
+            int numRiga = i + 1;
+            String riga = righe.get(i).trim();
+            int posUguale = riga.indexOf("=");
+
+            if ( riga.isEmpty() || riga.startsWith("#") ) {
+                continue;
+            }
+
+            // controllo la presenza del =
+            if ( posUguale == -1) {
+                throw new IllegalArgumentException("riga " + numRiga + ": manca il segno =");
+            }
+
+            String chiave = riga.substring(0, posUguale).trim();
+            String testoValore = riga.substring(posUguale + 1).trim();
+            int valore;
+
+            // controllo del valore intero 
+            try {
+                valore = Integer.parseInt(testoValore);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("riga " + numRiga + ": il valore non è un numero intero");
+            }
+
+            // controllo dei duplicati e delle chiavi
+            switch (chiave) {
+                case "puntiPerVincere":
+                    if ( cePunti ) {
+                        throw new IllegalArgumentException("riga " + numRiga + ": chiave già presente");
+                    }    
+                    cePunti = true;
+                    punti = valore;                
+                    break;
+                
+                case "scartoMinimo":
+                    if ( ceScarto ) {
+                        throw new IllegalArgumentException("riga " + numRiga + ": chiave già presente");
+                    }   
+                    ceScarto = true;
+                    scarto = valore;                 
+                    break;   
+
+                case "velocitaPalla":
+                    if ( ceVelocita ) {
+                        throw new IllegalArgumentException("riga " + numRiga + ": chiave già presente");
+                    }   
+                    ceVelocita = true;
+                    velocita =valore;                 
+                    break;
+
+                default:
+                    throw new IllegalArgumentException("riga " + numRiga + ": chiave sconosciuta: " + chiave);
+            }
+
+            // Controllare l'intervallo 
+            try {
+                new Impostazioni(punti, scarto, velocita);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("riga " + numRiga + ": " + e.getMessage());
+            }
+        }
+        return new Impostazioni(punti, scarto, velocita); // scrivete qui
     }
 
     /**
